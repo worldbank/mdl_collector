@@ -8,6 +8,8 @@ Created by the [Joint Data Center on Forced Displacement](https://www.jointdatac
 
 # Quick access
 
+Right-click and "Save link as" to download the files.
+
 - [UNHCR microdata library](data/unhcr/datasets.csv)
   
 - [WorldBank microdata library](data/world_bank/datasets.csv)
