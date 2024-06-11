@@ -1,0 +1,29 @@
+name: scrape
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0' # run at midnight on every Sunday.
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repo
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install all necessary packages
+        run: pip install requests pandas tqdm
+      - name: Run the scraping script for metadata
+        run: python src/main.py
+      - name: Commit and push if anything has changed
+        run: |-
+          git config user.name "Automated"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          timestamp=$(date -u)
+          git commit -m "Latest data: ${timestamp}" &&
+            export COMMIT_HASH=$(git rev-parse HEAD) ||
+            exit 0
+          git push
