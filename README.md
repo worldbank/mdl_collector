@@ -26,5 +26,5 @@ Each microdata library has its own subfolder. The records are saved in the follo
 
 `list.py`: Lists all datasets in the MDLs and creates a CSV file with the metadata
 
-`get.py`: Loop through all rows in `metadata.csv` to get data on the datasets
+`get.py`: Loop through all rows in `metadata.csv` to get data from the datasets and generate the `datasets.csv` file.
 
