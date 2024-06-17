@@ -13,47 +13,6 @@ UNHCR_URL = "https://microdata.unhcr.org/index.php/metadata/export/{}/json"
 UNHCR_INPUT_FILE = UNHCR_DATA_PATH + "metadata.csv"
 UNHCR_OUTPUT_FILE = UNHCR_DATA_PATH + "datasets.csv"
 
-def process_datasets(input_file, output_file):
-    """
-    Processes the dataset by normalizing nested JSON fields, renaming columns, 
-    and removing unnecessary columns.
-    
-    Args:
-    - input_file (str): Path to the input CSV file.
-    - output_file (str): Path to save the processed CSV file.
-    
-    Returns:
-    None
-    """
-    try:
-        df = pd.read_csv(input_file)
-        
-        # Set patterns to be removed from column names
-        patterns_to_remove = ["study_desc.", "doc_desc.", "study_info.", "method."]
-        df.columns = df.columns.str.replace("|".join(patterns_to_remove), "", regex=True)
-        df.columns = df.columns.str.replace("data_collection.", "method_")
-
-        # Normalize nested JSON columns
-        for col in find_list_columns(df):
-            data = df[col].apply(merge_dicts)
-            data_normalized = pd.json_normalize(data)
-            # Add prefix of column name to the new data
-            data_normalized.columns = [f"{col}_{c}" for c in data_normalized.columns]
-            df = pd.concat([df, data_normalized], axis=1)
-            df.drop(col, axis=1, inplace=True)
-
-        # Drop columns with all NaN values and the 'schematype' column
-        df.dropna(axis=1, how='all', inplace=True)
-        if 'schematype' in df.columns:
-            df.drop('schematype', axis=1, inplace=True)
-
-        # Save the processed dataset
-        df.to_csv(output_file, index=False)
-        print(f"Flattened dataset with shape {df.shape} saved to {output_file}")
-
-    except Exception as e:
-        print(f"Error processing file {input_file}: {e}")
-
 MAX_WORKERS = 20
 
 def fetch_data(url, id):
@@ -106,15 +65,6 @@ def process_datasets(df, output_file):
         patterns_to_remove = ["study_desc.", "doc_desc.", "study_info.", "method."]
         df.columns = df.columns.str.replace("|".join(patterns_to_remove), "", regex=True)
         df.columns = df.columns.str.replace("data_collection.", "method_")
-
-        # Normalize nested JSON columns
-        for col in find_list_columns(df):
-            data = df[col].apply(merge_dicts)
-            data_normalized = pd.json_normalize(data)
-            # Add prefix of column name to the new data
-            data_normalized.columns = [f"{col}_{c}" for c in data_normalized.columns]
-            df = pd.concat([df, data_normalized], axis=1)
-            df.drop(col, axis=1, inplace=True)
 
         # Drop columns with all NaN values and the 'schematype' column
         df.dropna(axis=1, how='all', inplace=True)
