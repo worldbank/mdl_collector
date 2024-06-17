@@ -2,7 +2,7 @@
 
 Python functions to scrape the microdata libraries (MDL) from the [UNHCR](https://microdata.unhcr.org/) and the [World Bank](https://microdata.worldbank.org).
 
-The repository uses Github Action to run weekly. Approximate runtime: <5min
+The repository uses Github Action to run weekly. 
 
 Created by the [Joint Data Center on Forced Displacement](https://www.jointdatacenter.org/).
 
