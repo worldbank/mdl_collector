@@ -1,8 +1,8 @@
-# UNHCR + World Bank microdata library scraper
+# UNHCR & World Bank microdata library collector
 
-Python functions to scrape the microdata libraries (MDL) from the [UNHCR](https://microdata.unhcr.org/) and the [World Bank](https://microdata.worldbank.org).
+This repository automates data collection from the [UNHCR](https://microdata.unhcr.org/) and the [World Bank](https://microdata.worldbank.org) microdata libraries.
 
-The repository uses Github Action to run weekly. 
+It uses a Python script and Github Action to run weekly. 
 
 Created by the [Joint Data Center on Forced Displacement](https://www.jointdatacenter.org/).
 
