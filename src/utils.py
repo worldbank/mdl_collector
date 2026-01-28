@@ -1,9 +1,12 @@
 import pandas as pd
 import ast
 from typing import List
+import os
 
-UNHCR_DATA_PATH = "data/unhcr/"
-WB_DATA_PATH = "data/world_bank/"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+UNHCR_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "unhcr") + "/"
+WB_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "world_bank") + "/"
 
 
 def find_list_columns(df: pd.DataFrame) -> List[str]:
