@@ -1,2 +1,4 @@
+_local/
 __pycache__/
-poetry.lock
+.uv-cache/
+.venv/
