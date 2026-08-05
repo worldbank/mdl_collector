@@ -49,6 +49,27 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(saved_metadata["id"].tolist(), [1, 2])
         self.assertEqual(saved_datasets["id"].tolist(), [1, 2])
 
+    def test_fetch_metadata_normalizes_string_ids(self):
+        with patch.object(
+            collector,
+            "fetch_json",
+            return_value={"records": [{"id": "2"}, {"id": "1"}]},
+        ):
+            metadata = collector.fetch_metadata(self.source)
+
+        self.assertEqual(metadata["id"].tolist(), [1, 2])
+
+    def test_string_metadata_id_matches_integer_archive_id(self):
+        pd.DataFrame({"id": [1], "title": ["Existing"]}).to_csv(
+            self.source.datasets_file, index=False
+        )
+        metadata = pd.DataFrame({"id": ["1"]})
+
+        with patch.object(collector, "fetch_dataset") as fetch_dataset:
+            collector.update_dataset_archive(self.source, metadata)
+
+        fetch_dataset.assert_not_called()
+
     def test_failed_detail_fetch_does_not_write_partial_archive(self):
         metadata = pd.DataFrame({"id": [1, 2]})
 

@@ -261,18 +261,14 @@ def enforce_schema(df, schema):
     Returns:
         DataFrame aligned to schema
     """
-    extra_cols = set(df.columns) - set(schema.keys())
+    schema_columns = list(schema)
+    extra_cols = set(df.columns) - set(schema_columns)
     if extra_cols:
         logger.info("Dropping %d extra columns not in schema", len(extra_cols))
         logger.debug("Extra columns: %s", sorted(extra_cols))
-        df = df.drop(columns=list(extra_cols))
 
-    missing_cols = set(schema.keys()) - set(df.columns)
+    missing_cols = set(schema_columns) - set(df.columns)
     if missing_cols:
         logger.info("Adding %d missing columns from schema", len(missing_cols))
-        for col in missing_cols:
-            df[col] = pd.NA
 
-    df = df[list(schema.keys())]
-
-    return df
+    return df.reindex(columns=schema_columns)

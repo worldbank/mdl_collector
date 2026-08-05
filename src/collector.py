@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 from pathlib import Path
 import tempfile
+import time
 from typing import Any
 
 import pandas as pd
@@ -15,17 +16,33 @@ logger = logging.getLogger(__name__)
 
 MAX_WORKERS = 20
 REQUEST_TIMEOUT = 60
+REQUEST_ATTEMPTS = 3
+RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
 def fetch_json(
     url: str, headers: dict[str, str] | None = None
 ) -> dict[str, Any]:
-    response = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
-    response.raise_for_status()
-    data = response.json()
-    if not isinstance(data, dict):
-        raise ValueError(f"Expected a JSON object from {url}")
-    return data
+    for attempt in range(REQUEST_ATTEMPTS):
+        try:
+            response = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
+            if (
+                response.status_code in RETRYABLE_STATUS_CODES
+                and attempt < REQUEST_ATTEMPTS - 1
+            ):
+                time.sleep(2**attempt)
+                continue
+            response.raise_for_status()
+            data = response.json()
+            if not isinstance(data, dict):
+                raise ValueError(f"Expected a JSON object from {url}")
+            return data
+        except (requests.ConnectionError, requests.Timeout):
+            if attempt == REQUEST_ATTEMPTS - 1:
+                raise
+            time.sleep(2**attempt)
+
+    raise RuntimeError(f"Request attempts exhausted for {url}")
 
 
 def fetch_metadata(source: SourceConfig) -> pd.DataFrame:
@@ -42,6 +59,10 @@ def fetch_metadata(source: SourceConfig) -> pd.DataFrame:
     metadata = pd.DataFrame(data)
     if metadata.empty or "id" not in metadata.columns:
         raise ValueError(f"{source.label} returned no usable metadata records")
+    try:
+        metadata["id"] = pd.to_numeric(metadata["id"], errors="raise").astype("Int64")
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{source.label} returned a non-numeric dataset ID") from exc
     return metadata.sort_values("id").reset_index(drop=True)
 
 
@@ -81,9 +102,10 @@ def update_dataset_archive(source: SourceConfig, metadata: pd.DataFrame) -> None
             raise ValueError(f"{source.datasets_file} is missing the id column")
         existing_ids = set(existing["id"].dropna())
 
+    metadata_ids = pd.to_numeric(metadata["id"], errors="raise")
     new_ids = [
         dataset_id
-        for dataset_id in metadata["id"].dropna().unique()
+        for dataset_id in metadata_ids.dropna().unique()
         if dataset_id not in existing_ids
     ]
     if not new_ids:
@@ -127,7 +149,12 @@ def update_dataset_archive(source: SourceConfig, metadata: pd.DataFrame) -> None
     )
     if existing is not None:
         existing = enforce_schema(existing, source.schema)
-        datasets = pd.concat([existing, new_records], ignore_index=True)
+        schema_columns = list(source.schema)
+        populated_existing = existing.dropna(axis="columns", how="all")
+        populated_new_records = new_records.dropna(axis="columns", how="all")
+        datasets = pd.concat(
+            [populated_existing, populated_new_records], ignore_index=True
+        ).reindex(columns=schema_columns)
     else:
         datasets = new_records
 
