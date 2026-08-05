@@ -40,6 +40,8 @@ Each microdata library has its own subfolder. The records are saved in the follo
 
 - `datasets.csv`: all information about the datasets in both microdata libraries
 
+Detailed records are append-only: an ID is fetched when first seen and is not refreshed on later runs. Removed catalog IDs therefore remain in `datasets.csv` as archived records.
+
 **Note on UNHCR metadata updates**: The UNHCR API returns live statistics (`total_views`, `total_downloads`) that change frequently. This means the `metadata.csv` file for UNHCR will show changes on most runs even when no new datasets are added, as view counts are updated.
 
 ## Schema Management
@@ -61,6 +63,8 @@ If the API introduces new fields that should be tracked:
 3. Re-run the scraper - new field will be populated in existing rows with NaN
 
 Fields not in the schema are automatically dropped during collection.
+
+Source URLs, response paths, output folders, and schemas are configured in `src/config.py`.
 
 # Changelog
 

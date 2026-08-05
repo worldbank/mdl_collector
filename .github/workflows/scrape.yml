@@ -1,4 +1,9 @@
 name: scrape
+permissions:
+  contents: write
+concurrency:
+  group: scrape
+  cancel-in-progress: false
 on:
   workflow_dispatch:
   schedule:
@@ -8,22 +13,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out this repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
-      - name: Install all necessary packages
-        run: pip install requests pandas tqdm
-      - name: Run the scraping script for metadata
-        run: python src/main.py
+          python-version: '3.12'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --locked
+      - name: Run the collector
+        run: uv run python src/main.py
       - name: Commit and push if anything has changed
         run: |-
           git config user.name "Automated"
           git config user.email "actions@users.noreply.github.com"
-          git add -A
+          git add data
+          git diff --cached --quiet && exit 0
           timestamp=$(date -u)
-          git commit -m "Latest data: ${timestamp}" &&
-            export COMMIT_HASH=$(git rev-parse HEAD) ||
-            exit 0
+          git commit -m "Latest data: ${timestamp}"
           git push

@@ -1,10 +1,15 @@
-from orchestrators import list_metadata, fetch_datasets
+import logging
+
+import collector
+
 
 def main():
-    list_metadata.run()
-    fetch_datasets.run()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+    collector.run()
+
 
 if __name__ == "__main__":
     main()
-
-

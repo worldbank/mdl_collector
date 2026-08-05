@@ -7,10 +7,10 @@ This module provides:
 3. Schema enforcement to align dataframes before merging
 """
 
-import pandas as pd
 import logging
 
-logging.basicConfig(level=logging.INFO)
+import pandas as pd
+
 logger = logging.getLogger(__name__)
 
 
@@ -236,9 +236,11 @@ def apply_prefix_mapping(df):
 
     df = df.rename(columns=new_columns)
 
-    duplicates = set([col for col in df.columns if df.columns.tolist().count(col) > 1])
+    duplicates = set(df.columns[df.columns.duplicated()])
     if duplicates:
-        logger.warning(f"Duplicate columns detected after prefix mapping: {duplicates}")
+        raise ValueError(
+            f"Duplicate columns after prefix mapping: {sorted(duplicates)}"
+        )
 
     return df
 
@@ -261,34 +263,16 @@ def enforce_schema(df, schema):
     """
     extra_cols = set(df.columns) - set(schema.keys())
     if extra_cols:
-        logger.info(f"Dropping {len(extra_cols)} extra columns not in schema")
-        logger.debug(f"Extra columns: {sorted(extra_cols)}")
+        logger.info("Dropping %d extra columns not in schema", len(extra_cols))
+        logger.debug("Extra columns: %s", sorted(extra_cols))
         df = df.drop(columns=list(extra_cols))
 
     missing_cols = set(schema.keys()) - set(df.columns)
     if missing_cols:
-        logger.info(f"Adding {len(missing_cols)} missing columns from schema")
+        logger.info("Adding %d missing columns from schema", len(missing_cols))
         for col in missing_cols:
             df[col] = pd.NA
 
     df = df[list(schema.keys())]
 
     return df
-
-
-def get_schema_for_source(source_name):
-    """
-    Get the schema for a given data source.
-
-    Args:
-        source_name: 'worldbank' or 'unhcr'
-
-    Returns:
-        Schema dictionary
-    """
-    if source_name == 'worldbank':
-        return WORLD_BANK_SCHEMA
-    elif source_name == 'unhcr':
-        return UNHCR_SCHEMA
-    else:
-        raise ValueError(f"Unknown source: {source_name}. Must be 'worldbank' or 'unhcr'")

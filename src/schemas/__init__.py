@@ -7,7 +7,6 @@ Provides fixed schemas and column mapping utilities to prevent schema drift.
 from .column_mappings import (
     apply_prefix_mapping,
     enforce_schema,
-    get_schema_for_source,
     WORLD_BANK_SCHEMA,
     UNHCR_SCHEMA,
 )
@@ -15,7 +14,6 @@ from .column_mappings import (
 __all__ = [
     'apply_prefix_mapping',
     'enforce_schema',
-    'get_schema_for_source',
     'WORLD_BANK_SCHEMA',
     'UNHCR_SCHEMA',
 ]
